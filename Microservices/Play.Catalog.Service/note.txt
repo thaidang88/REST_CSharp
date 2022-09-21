@@ -1,0 +1,24 @@
+dotnet new webapi -n Play.Catalog.Service --framework net5.0
+dotnet dev-certs https --trust // TO enable https in localhost
+
+dotnet add package MongoDB.Driver
+
+docker run -d --rm --name mongo -p 27017:27017 -v mongodbdata:/data/db mongo
+docker ps
+
+dotnet new webapi -n Play.Inventory.Service --framework net5.0
+
+
+dotnet new classlib -n Play.Common --framework net5.0
+dotnet pack -o ..\..\..\packages
+
+dotnet nuget add source D:\Projects\packages -n PlayEconomy
+dotnet add package Play.Common
+
+
+
+Docker compose: tool define multi container Docker
+
+
+dotnet new classlib -n Play.Catalog.Comtract --framework net5.0
+dotned add package MassTransit.AspNetCore

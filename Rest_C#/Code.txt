@@ -1,0 +1,178 @@
+dotnet new webapi -n Catalog
+
+dotnet dev-certs https --trust
+
+dotnet add package MongoDB.Driver
+
+docker run -d --rm --name mongo -p 27017:27017 -v mongodbdata:/data/db mongo
+
+Secret Manger
+docker stop mongo
+docker volume ls
+docker volume rm mongodbdata
+docker run -d --rm --name mongo -p 27017:27017 -v mongodbdata:/data/db -e MONGO_INITDB_ROOT_USERNAME=mongoadmin -e MONGO_INITDB_ROOT_PASSWORD=root mongo
+
+docker ps
+
+appsetting.json
+
+dotnet user-secrets init
+dotnet user-secrets set MongoDBSettings:Password root
+
+Health check
+- Add code to Startup.cs
+
+services.AddHealthChecks();
+endpoints.MapHealthChecks("/health");
+
+dotnet add package AspNetCore.Healthchecks.MongoDb
+
+Docker:
+Add docker plugin extension 
+Ctrl+Shif+P : docker:add docker configuration files
+Add docker file with content:
+FROM mcr.microsoft.com/dotnet/aspnet:5.0 AS base
+WORKDIR /app
+EXPOSE 80
+
+ENV ASPNETCORE_URLS=http://+:80
+
+FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
+WORKDIR /src
+COPY ["Catalog.csproj", "./"]
+RUN dotnet restore "Catalog.csproj"
+COPY . .
+WORKDIR "/src/."
+RUN dotnet build "Catalog.csproj" -c Release -o /app/build
+
+# FROM build AS publish
+# RUN dotnet publish "Catalog.csproj" -c Release -o /app/publish
+
+FROM base AS final
+WORKDIR /app
+COPY --from=build /app/build .
+ENTRYPOINT ["dotnet", "Catalog.dll"]
+
+
+
+docker build -t catalog:v1 .
+
+PS C:\Users\PC\Desktop\Rest_C#\Catalog> docker build -t catalog:v1 .
+[+] Building 5.6s (9/17)
+ => [internal] load build definition from Dockerfile                                                                                         0.1s 
+ => => transferring dockerfile: 596B                                                                                                         0.1s 
+ => [internal] load .dockerignore                                                                                                            0.1s 
+ => => transferring context: 2B                                                                                                              0.0s 
+ => [internal] load metadata for mcr.microsoft.com/dotnet/aspnet:5.0                                                                         1.1s 
+ => [internal] load metadata for mcr.microsoft.com/dotnet/sdk:5.0                                                                            1.1s 
+ => CANCELED [build 1/7] FROM mcr.microsoft.com/dotnet/sdk:5.0@sha256:081a6c31153f16c02eeb7f1ad663adb8e1d21fa0d59402348c13bba7659a5419       4.1s 
+ => => resolve mcr.microsoft.com/dotnet/sdk:5.0@sha256:081a6c31153f16c02eeb7f1ad663adb8e1d21fa0d59402348c13bba7659a5419                      0.0s 
+ => => sha256:b160c8f3dbd6059e60bf70c74957d61411f8e510dad6dfcdf9de529fe6a054a7 7.11kB / 7.11kB                                               0.0s 
+ => => sha256:081a6c31153f16c02eeb7f1ad663adb8e1d21fa0d59402348c13bba7659a5419 2.53kB / 2.53kB                                               0.0s 
+ => => sha256:363c0145ad5850685d8bb20fdd7190b66c23287d5cc66ab3e2a32c8499b54bef 2.01kB / 2.01kB                                               0.0s 
+ => => sha256:42dd948b1ee9f743a378f9372ed86977d36382eba7c24c99756e55806ed5fad7 3.15MB / 31.77MB                                              4.1s 
+ => => sha256:dd03aafcc609685b4c31615d2745a6f1b2bccc63e738e2dc2f9879030b10c248 6.29MB / 17.07MB                                              4.1s 
+ => => sha256:e1acddbe380c63f0de4b77d3f287b7c81cd9d89563a230692378126b46ea6546 3.15MB / 27.15MB                                              4.1s 
+ => [internal] load build context                                                                                                            4.0s 
+ => => transferring context: 11.59MB                                                                                                         3.8s 
+ => CANCELED [base 1/2] FROM mcr.microsoft.com/dotnet/aspnet:5.0@sha256:2a5576ebd94c5a62034bdc310e406ac4412a77a46cfde7fec5feb181c8afd165     4.2s 
+ => => resolve mcr.microsoft.com/dotnet/aspnet:5.0@sha256:2a5576ebd94c5a62034bdc310e406ac4412a77a46cfde7fec5feb181c8afd165                   0.0s 
+ => => sha256:2a5576ebd94c5a62034bdc310e406ac4412a77a46cfde7fec5feb181c8afd165 2.53kB / 2.53kB                                               0.0s 
+ => => sha256:7d13026e2de301ff79b1ec583cbdc1cbbaeb8173ddc6ac25c9c7c8c9a2830902 1.37kB / 1.37kB                                               0.0s 
+ => => sha256:1f3ec31914a866433c51429a4b4f8f37ea564a859e3a363f3826abda90cff5c5 3.26kB / 3.26kB                                               0.0s 
+ => => sha256:dd03aafcc609685b4c31615d2745a6f1b2bccc63e738e2dc2f9879030b10c248 6.29MB / 17.07MB                                              4.1s 
+ => => sha256:42dd948b1ee9f743a378f9372ed86977d36382eba7c24c99756e55806ed5fad7 3.15MB / 31.77MB                                              4.1s 
+ => => sha256:e1acddbe380c63f0de4b77d3f287b7c81cd9d89563a230692378126b46ea6546 3.15MB / 27.15MB                                              4.1s 
+ => CACHED [build 2/7] WORKDIR /src                                                                                                          0.0s 
+ => ERROR [build 3/7] COPY [Catalog/Catalog.csproj, Catalog/]                                                                                0.0s 
+------
+ > [build 3/7] COPY [Catalog/Catalog.csproj, Catalog/]:
+------
+failed to compute cache key: "/Catalog/Catalog.csproj" not found: not found
+PS C:\Users\PC\Desktop\Rest_C#\Catalog> 
+
+
+docker network create nettest
+docker network ls
+docker ps
+docker stop mongo
+docker run -d --rm --name mongo -p 27017:27017 -v mongodbdata:/data/db -e MONGO_INITDB_ROOT_USERNAME=mongoadmin -e MONGO_INITDB_ROOT_PASSWORD=root --network=nettest mongo
+docker images
+docker run -it --rm -p 8080:80 -e MongoDBSettings:Host=mongo -e MongoDBSettings:Password=root --network=nettest catalog:v1
+
+PS C:\Users\PC\Desktop\Rest_C#\Catalog> docker run -it --rm -p 8080:80 -e MongoDBSettings:Host=mongo -e MongoDBSettings:Password=root --network=nettest catalog:v1
+info: Microsoft.Hosting.Lifetime[0]
+      Now listening on: http://[::]:80
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Production
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /app
+	  
+	  
+
+Register user in docker.com
+docker login
+docker tag catalog:v1 thai/catalog:v1
+docker images
+docker push thai/catalog
+
+docker rmi thai/catalog
+docker rmi catalog:v1
+
+docker images
+docker logout
+docker run -it --rm -p 8080:80 -e MongoDBSettings:Host=mongo -e MongoDBSettings:Password=root --network=nettest thai/catalog:v1
+
+
+Enable Kubernetes in setting Docker
+
+kubectl config current-context
+Installing Kubernetes extension
+Create yaml files
+
+kubectl create secret generic catalog-secrets --from-literal=mongodb-password='root'
+cd .\kubernetes\
+kubectl apply -f .\catalog.yaml
+kubectl get deployments
+kubectl get pods
+kubectl logs catalog-depoyment-id ..
+kubectl apply -f .\mongo.yaml
+
+kubectl get statefulsets
+
+kubectl get pods
+
+kubectl scale deployments/catalog-depoyment --relicas=3
+
+PS C:\Users\PC\Desktop\Rest_C#> kubectl.exe get pods
+NAME                                  READY   STATUS    RESTARTS   AGE
+catalog-deployment-5fdfd4f947-kl5wk   0/1     Running   2          42m
+catalog-deployment-7fc6586b8b-dhc5j   1/1     Running   0          83m
+mongodb-stateful-0                    1/1     Running   0          25m
+PS C:\Users\PC\Desktop\Rest_C#> kubectl.exec
+
+
+kubectl get pods -w
+
+wsl --shutdown to kill process
+
+
+
+dotnet new xunit -n Catalog.UnitTests
+
+cd Catalog.UnitTests
+dotnet add reference ..\Catalog.Api\Catalog.csproj
+
+dotnet add package Microsoft.Extensions.Logging.Abstractions
+
+dotnet add package moq
+
+kubectl get deployment ngix-deployment -o yaml > ngix-deployment-result.yaml
+
+
+
+
+
+
